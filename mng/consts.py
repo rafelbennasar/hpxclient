@@ -1,0 +1,15 @@
+
+MINER_TRANSFER_ACK_KIND = 1
+CONSUMER_TRANSFER_ACK_KIND = 2
+MINER_END_TRANSFER_KIND = 3
+CONSUMER_END_TRANSFER_KIND = 4
+TRANSFER_ACK_KIND = (MINER_TRANSFER_ACK_KIND,
+                     CONSUMER_TRANSFER_ACK_KIND,
+                     MINER_END_TRANSFER_KIND,
+                     CONSUMER_END_TRANSFER_KIND,
+                     )
+
+# we send ACK confirmation after 1MB or 15 seconds, whatever
+# happens first.
+TRANSFER_DATA_ACK_BLOCK_SIZE = 1048576 * 1024  # 1 MB in bytes
+TRANSFER_DATA_ACK_MAX_PERIOD = 15 * 1000  # ms
