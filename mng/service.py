@@ -204,17 +204,3 @@ async def start_client(email=None, password=None, public_key=None,
     else:
         logger.warning("RPC server not started as the user/pwd is "
                        "not defined. Please, define it in the hprox.cfg")
-
-
-def main():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_client(email='denroz@inbox.ru',
-                                         password='Qwerty12'))
-
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        sys.stderr.flush()
-        print('\nStopped\n')
-    finally:
-        loop.close()
