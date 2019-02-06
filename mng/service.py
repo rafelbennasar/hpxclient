@@ -56,7 +56,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         mng_consumers.InfoVersionConsumer
     ]
 
-    def __init__(self, email=None, password=None, ui=None,
+    def __init__(self, email=None, password=None, message_handler=None,
                  public_key=None, secret_key=None,
                  ssl_context=None):
         global MANAGER
@@ -68,7 +68,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         self.session_id = None
         self.user_id = None
 
-        self.ui = ui
+        self.message_handler = message_handler
 
         self.email = email
         self.password = password
@@ -147,8 +147,8 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         logger.info("hpxclient.mng.service Connection lost.")
 
     def message_received(self, message):
-        if self.ui:
-            self.ui.process_message(message)
+        if self.message_handler:
+            self.message_handler(message)
         protocols.process_message(self, message, self.REGISTERED_CONSUMERS)
 
     def write_data(self, msg_producer):
@@ -169,7 +169,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
 
 
 async def start_client(email=None, password=None, public_key=None,
-                       secret_key=None, ui=None,
+                       secret_key=None, message_handler=None,
                        retry_initial_connection=False):
     """ Starts client services:
     """
@@ -184,14 +184,14 @@ async def start_client(email=None, password=None, public_key=None,
                                public_key=public_key,
                                secret_key=secret_key,
                                ssl_context=ssl_context,
-                               ui=ui)
+                               message_handler=message_handler)
 
     await protocols.ReconnectingProtocolWrapper.create_connection(
         lambda: manager_,
         host=hpxclient_settings.PROXY_MNG_SERVER_IP,
         port=hpxclient_settings.PROXY_MNG_SERVER_PORT,
         ssl=ssl_context,
-        retry_initial_connection=False)
+        retry_initial_connection=retry_initial_connection)
 
     if hpxclient_settings.RPC_USERNAME and hpxclient_settings.RPC_PASSWORD:
         loop = asyncio.get_event_loop()
