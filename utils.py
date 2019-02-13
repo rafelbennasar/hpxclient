@@ -36,7 +36,8 @@ def set_ips(settings, domain):
 def load_data_config_file(config_file):
     from hpxclient import settings as hpxclient_settings
     if not config_file:
-        config_file = os.path.join(hpxclient_settings.HPROXY_DIR, 'hprox.cfg')
+        config_file = os.path.join(hpxclient_settings.HPROX_DIR,
+                                   hpxclient_consts.HPROX_CONFIG_NAME)
 
     config = configparser.ConfigParser()
     try:

@@ -2,13 +2,15 @@ import os
 import pathlib
 import socket
 
+from hpxclient import consts as hpxclient_consts
+
 DEBUG = False
 
 USER_DIR = str(pathlib.Path.home())
-HPROXY_DIR = os.path.join(USER_DIR, '.hproxy')
+HPROX_DIR = os.path.join(USER_DIR, hpxclient_consts.HPROX_DIR_NAME)
 
-if not os.path.exists(HPROXY_DIR):
-    os.mkdir(HPROXY_DIR)
+if not os.path.exists(HPROX_DIR):
+    os.mkdir(HPROX_DIR)
 
 PROXY_LISTENER_LOCAL_PORT = 8080
 DOMAIN = 'hprox.com'
