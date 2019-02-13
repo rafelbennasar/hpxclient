@@ -4,6 +4,7 @@ HPX_NUMBER_OF_DECIMALS = 8
 
 COUNTRY_PROXY = "PL"
 
+HPROX_DIR_NAME = '.hprox'
 
 def compile_cp_regex():
     return [re.compile(regex) for regex in [
