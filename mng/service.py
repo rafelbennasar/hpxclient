@@ -1,5 +1,4 @@
 import asyncio
-import sys
 
 from hpxclient import logger
 from hpxclient import protocols
@@ -8,6 +7,7 @@ from hpxclient.fetcher import service as fetcher_service
 from hpxclient.listener import service as listener_service
 from hpxclient.bridge import service as bridge_service
 from hpxclient import settings as hpxclient_settings
+from hpxclient import consts as hpxclient_consts
 from hpxclient.mng import consts as mng_consts
 
 from hpxclient.mng import producers as mng_producers
@@ -203,4 +203,5 @@ async def start_client(email=None, password=None, public_key=None,
         logger.info("RPC server started.")
     else:
         logger.warning("RPC server not started as the user/pwd is "
-                       "not defined. Please, define it in the hprox.cfg")
+                       "not defined. Please, define it in the %s"
+                       % hpxclient_consts.HPROX_CONFIG_NAME)
