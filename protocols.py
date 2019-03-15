@@ -82,6 +82,7 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
                     #raise
                 print(e)
                 print("Disconnected. Trying to connect in {} seconds".format(delayed_timeout))
+                delayed_timeout = min([2*delayed_timeout, 60])
                 await asyncio.sleep(delayed_timeout)
 
 
