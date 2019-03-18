@@ -36,10 +36,9 @@ class RPCManagerServer(protocols.MsgpackProtocol):
         self.transport = transport
 
     def connection_lost(self, exc):
-        logger.info("hpxclient.mng.service Connection lost.")
+        logger.debug("hpxclient.mng.service Connection lost.")
 
     def message_received(self, message):
-        logger.info("MESSAGE RECEIVED in the RCP: %s", message)
         protocols.process_message(self, message, self.REGISTERED_CONSUMERS)
 
     def write_data(self, msg_producer):
@@ -62,6 +61,8 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         global MANAGER
         MANAGER = self
         super().__init__()
+
+        self.services_started = False
 
         self.transport = None
         self.is_authorized = False
@@ -91,6 +92,8 @@ class ManagerProtocol(protocols.MsgpackProtocol):
                    "user_id": self.user_id,
                    "public_key": self.public_key,
                    'ssl_context': self.ssl_context}
+
+        self.services_started = True
 
         await asyncio.wait([
             listener_service.configure_service(**ps_keys),
@@ -144,7 +147,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
                                               secret_key=self.secret_key))
 
     def connection_lost(self, exc):
-        logger.info("hpxclient.mng.service Connection lost.")
+        logger.debug("hpxclient.mng.service Connection lost.")
 
     def message_received(self, message):
         if self.message_handler:

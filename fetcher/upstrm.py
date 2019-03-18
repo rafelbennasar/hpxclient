@@ -133,8 +133,8 @@ class FetcherForwarderProtocol(protocols.MsgpackProtocol):
         self.public_key = public_key
         self.conn_id = None
         self.transport = None
-        self.is_authorized = False
-        self.is_authenticated = False
+        self.is_authorized = True
+        self.is_authenticated = True
         self.amount_data_downloaded = 0
 
     def connection_made(self, transport):
@@ -143,7 +143,7 @@ class FetcherForwarderProtocol(protocols.MsgpackProtocol):
         self.register_conn()
 
     def connection_lost(self, exc):
-        logger.info("Connection lost in FetcherForwarderProtocol")
+        logger.debug("Connection lost in FetcherForwarderProtocol")
 
     def register_conn(self):
         self.write_data(
