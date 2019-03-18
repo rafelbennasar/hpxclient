@@ -25,16 +25,11 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
     def connection_lost(self, exc):
         self._wrapped_protocol.connection_lost(exc)
 
-        """
-        We would try to reconnect on 'connection lost' event
-        ONLY if the protocol was already authorized.
-        """
         try:
-            if self._wrapped_protocol.is_authenticated:
-                self._wrapped_protocol = None
-                asyncio.ensure_future(
-                    self.create_connection(self._protocol_factory, self._host, self._port)
-                )
+            self._wrapped_protocol = None
+            asyncio.ensure_future(
+                self.create_connection(self._protocol_factory, self._host, self._port)
+            )
         except AttributeError as e:
             pass
         except Exception as e:

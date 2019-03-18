@@ -18,8 +18,9 @@ class AuthResponseConsumer(protocols.AuthResponseConsumer):
             self.protocol.user_id = self.data[b'user_id']
             self.protocol.public_key = self.data[b'public_key']
             self.protocol.is_authenticated = True
-            logger.info("Connection authorized. Starting all services.")
-            asyncio.ensure_future(self.protocol.start_services())
+            if not self.protocol.services_started:
+                logger.info("Connection authorized. Starting all services.")
+                asyncio.ensure_future(self.protocol.start_services())
         else:
             logger.error("Unexpected error: %s", error.decode())
             self.protocol.error = error.decode()
@@ -32,8 +33,6 @@ class RPCAuthRequestConsumer(protocols.RPCAuthRequestConsumer):
         password = self.data[b'password'].decode()
         auth_result = username == hpxclient_settings.RPC_USERNAME \
                       and password == hpxclient_settings.RPC_PASSWORD
-        logger.info("Auth result: %s", auth_result)
-
         self.protocol.write_data(
             protocols.RPCAuthResponseProducer(result=auth_result)
         )
