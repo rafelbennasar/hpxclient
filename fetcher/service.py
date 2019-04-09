@@ -11,12 +11,11 @@ FETCHER_TRANS = None
 FETCHER_VERSION = 'asyncio'  # delete this once we decide to use only this
 
 
-async def configure_service(user_id, session_id, public_key, ssl_context=None):
+async def configure_service(user_id, public_key, ssl_context=None):
     global FETCHER_TRANS
 
     await asyncio.wait(
-        [fetcher_upstream.configure_client(user_id, session_id,
-                                           public_key, ssl_context),
+        [fetcher_upstream.configure_client(user_id, public_key, ssl_context),
          ])
 
     # On reconnect we don't want to set it up again

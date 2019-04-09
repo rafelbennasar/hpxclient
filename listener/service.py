@@ -1,17 +1,17 @@
 import sys
 import random
 import asyncio
+import logging
 
-from hpxclient import logger
 from hpxclient import protocols
-from hpxclient import consts as hpxclient_consts
+from hpxclient import settings as hpxclient_settings
+from hpxclient import utils as hpxclient_utils
 from hpxclient.bridge import service as bridge_service
 from hpxclient.listener import consumers as listener_consumers
-from hpxclient.mng import service as manager_service
-from hpxclient import utils as hpxclient_utils
 from hpxclient.mng import consts as mng_consts
-from hpxclient import settings as hpxclient_settings
+from hpxclient.mng import service as manager_service
 
+logger = logging.getLogger(__name__)
 
 FETCHER = None
 
@@ -139,7 +139,8 @@ class BrowserListenerServer(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport
         self.processor = self.get_processor()
-        logger.info("""Connection %s made to client.LocalListener Processor: %s""", self.conn_id, self.processor)
+        logger.debug("Connection %s made to client.LocalListener Processor: %s",
+                     self.conn_id, self.processor)
 
         if self.processor is None:
             self.transport.close()
@@ -198,17 +199,21 @@ class BrowserListenerServer(asyncio.Protocol):
         self.processor.trans_conn(self.conn_id, data)
 
     def connection_lost(self, exc):
-        logger.info("[Consumer] Sending Close-Transfer-ACK: %s bytes for conn id %s",
+        logger.debug("Connection %s lost to client.LocalListener",
+                     self.conn_id)
+        logger.info("[Consumer] Sending Close-Transfer-ACK: %s bytes "
+                    "for conn id %s",
                     self.amount_data_downloaded, self.conn_id)
-        manager_service.MANAGER.send_transfer_consumer_close(self.conn_id,
-                                                             self.amount_data_downloaded)
+        manager_service.MANAGER.send_transfer_consumer_close(
+            self.conn_id, self.amount_data_downloaded)
         self.amount_data_downloaded = 0
 
         if FETCHER is not None:
             FETCHER.close_conn(self.conn_id)
 
         if self.conn_id in listener_consumers.BROWSER_TASKS:
-            logger.warning("[LocalListener] Deleting CONN ID %s from TASKS", self.conn_id)
+            logger.warning("[LocalListener] Deleting CONN ID %s from TASKS",
+                           self.conn_id)
             del listener_consumers.BROWSER_TASKS[self.conn_id]
 
     def write_to_browser(self, data):

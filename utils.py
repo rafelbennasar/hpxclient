@@ -7,9 +7,11 @@ import string
 import random
 import re
 import ssl
+import logging
 
-from hpxclient import logger
 from hpxclient import consts as hpxclient_consts
+
+logger = logging.getLogger(__name__)
 
 
 def cast_value(name, value):

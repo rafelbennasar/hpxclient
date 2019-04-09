@@ -1,14 +1,16 @@
 import asyncio
 import socket
 import time
+import logging
 
-from hpxclient import logger
 #from hpxclient import consts as hpxclient_consts
 from hpxclient import settings as hpxclient_settings
 from hpxclient.bridge import consumers as bridge_consumers
 from hpxclient.bridge import producers as bridge_producers
 from hpxclient.bridge import consts as bridge_consts
 from hpxclient import protocols
+
+logger = logging.getLogger(__name__)
 
 BROADCAST_POOL_SIZE = 10
 

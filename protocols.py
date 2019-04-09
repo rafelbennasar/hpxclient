@@ -1,10 +1,10 @@
+import logging
 import asyncio
 import time
 import struct
 import msgpack
 
-from hpxclient import logger
-
+logger = logging.getLogger(__name__)
 
 DEFAULT_DELAY_TIMEOUT = 2
 LENGTH_SIZE = struct.calcsize("<L")
@@ -21,6 +21,7 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
     def connection_made(self, transport):
         self._wrapped_protocol = self._protocol_factory()
         self._wrapped_protocol.connection_made(transport)
+        logger.debug("Connection made. %s", self._wrapped_protocol)
 
     def connection_lost(self, exc):
         self._wrapped_protocol.connection_lost(exc)
@@ -34,6 +35,8 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
             pass
         except Exception as e:
             logger.error(e)
+        import time
+        time.sleep(5)
 
     def pause_writing(self):
         return self._wrapped_protocol.pause_writing()
@@ -62,22 +65,22 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
                 if sock:
                     await loop.create_connection(lambda: wrapper, sock=sock)
                 else:
-                    logger.debug("Create connection for %s, %s, %s, %s",
+                    logger.debug("Trying to connect to %s, %s, %s, %s",
                                  wrapper, host, port, ssl)
                     await loop.create_connection(lambda: wrapper,
                                                  host=host,
                                                  port=port,
                                                  ssl=manager_service.ssl_context)
+                logger.debug("Connection created for %s, %s, %s, %s",
+                             wrapper, host, port, ssl)
                 return
             except OSError as e:
                 if not retry_initial_connection:
                     logger.info("Not retrying closed connection: %s",
                                 protocol_factory)
                     break
-                    #raise
-                print(e)
-                print("Disconnected. Trying to connect in {} seconds".format(delayed_timeout))
-                delayed_timeout *= 2
+                logger.info("Disconnected. Trying to connect in {} seconds".format(delayed_timeout))
+                delayed_timeout = min(delayed_timeout * 2, 60)
                 await asyncio.sleep(delayed_timeout)
 
 

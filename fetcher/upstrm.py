@@ -1,13 +1,18 @@
 import asyncio
 import sys
+import logging
 
 from hpxclient import settings as hpxclient_settings
-from hpxclient import consts as hpxclient_consts, logger
+from hpxclient import consts as hpxclient_consts
 from hpxclient import protocols
 from hpxclient.mng import consts as mng_consts
 from hpxclient.fetcher import consumers as fetcher_consumers
 from hpxclient.mng import service as manager_service
 from hpxclient import utils as hpxclient_utils
+
+logger = logging.getLogger(__name__)
+
+FETCHER_UPSTREAM = None
 
 
 class TransTransporter(asyncio.Protocol):
@@ -126,10 +131,12 @@ class FetcherForwarderProtocol(protocols.MsgpackProtocol):
         fetcher_consumers.CloseConnConsumer
     ]
 
-    def __init__(self, user_id, session_id, public_key):
+    def __init__(self, user_id, public_key):
         super().__init__()
+        global FETCHER_UPSTREAM
+        FETCHER_UPSTREAM = self
         self.user_id = user_id
-        self.session_id = session_id
+        self.session_id = None
         self.public_key = public_key
         self.conn_id = None
         self.transport = None
@@ -138,14 +145,24 @@ class FetcherForwarderProtocol(protocols.MsgpackProtocol):
         self.amount_data_downloaded = 0
 
     def connection_made(self, transport):
-        logger.debug("Connection made to FetcherForwarderProtocol")
+        logger.debug("Connection made to FetcherForwarderProtocol. Conn id %s",
+                     self.conn_id)
         self.transport = transport
         self.register_conn()
 
     def connection_lost(self, exc):
-        logger.debug("Connection lost in FetcherForwarderProtocol")
+        logger.debug("Connection lost in FetcherForwarderProtocol. Conn id %s",
+                     self.conn_id)
+
+    def _update_session_id(self):
+        self.session_id = manager_service.MANAGER.get_session_id()
+        logger.debug("Session id %s updated in fetcher service",
+                     self.session_id)
 
     def register_conn(self):
+        self._update_session_id()
+        logger.debug("Registering session id %s for user %s and public key %s",
+                     self.session_id, self.user_id, self.public_key)
         self.write_data(
             protocols.RegisterConnPIDProducer(user_id=self.user_id,
                                               session_id=self.session_id,
@@ -160,10 +177,10 @@ class FetcherForwarderProtocol(protocols.MsgpackProtocol):
                 protocols.create_msgpack_message(msg_producer.msg2str()))
 
 
-async def configure_client(pid, session_id, public_key, ssl_context=None):
+async def configure_client(pid, public_key, ssl_context=None):
     dhost, dport = hpxclient_settings.PROXY_FETCHER_SERVER_IP, \
                    hpxclient_settings.PROXY_FETCHER_SERVER_PORT
-    forwarder_ = FetcherForwarderProtocol(pid, session_id, public_key)
+    forwarder_ = FetcherForwarderProtocol(pid, public_key)
     return await protocols.ReconnectingProtocolWrapper.create_connection(
         lambda: forwarder_,
         host=dhost,

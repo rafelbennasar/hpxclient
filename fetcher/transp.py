@@ -1,3 +1,4 @@
+import logging
 import threading
 import datetime
 import logging
@@ -9,9 +10,6 @@ from urllib import parse as urlparse
 
 from hpxclient import settings as hpxclient_settings
 
-
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] {%(levelname)s} %(message)s')
-logging.getLogger('asyncio').setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 

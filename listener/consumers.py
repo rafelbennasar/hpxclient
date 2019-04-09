@@ -1,5 +1,8 @@
+import logging
 
-from hpxclient import protocols, logger
+from hpxclient import protocols
+
+logger = logging.getLogger(__name__)
 
 # It's indexed by CONN_ID (not by sessions).
 BROWSER_TASKS = {}
