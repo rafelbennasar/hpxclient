@@ -14,6 +14,7 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
     def __init__(self, protocol_factory, host, port):
         self._protocol_factory = protocol_factory
         self._wrapped_protocol = None
+        self.reconnect = True
 
         self._host = host
         self._port = port
@@ -25,6 +26,10 @@ class ReconnectingProtocolWrapper(asyncio.Protocol):
 
     def connection_lost(self, exc):
         self._wrapped_protocol.connection_lost(exc)
+        logger.debug("Connection lost. %s", self._wrapped_protocol)
+        if not self.reconnect:
+            logger.debug("Not reconnecting")
+            return
 
         try:
             self._wrapped_protocol = None

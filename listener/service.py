@@ -27,10 +27,10 @@ class FetcherProtocol(protocols.MsgpackProtocol):
         listener_consumers.CloseConnConsumer
     ]
 
-    def __init__(self, session_id, user_id, public_key):
+    def __init__(self, user_id, public_key):
         super(FetcherProtocol, self).__init__()
         self.transport = None
-        self.session_id = session_id
+        self.session_id = None
         self.user_id = user_id
         self.public_key = public_key
         self.is_authorized = True
@@ -60,10 +60,18 @@ class FetcherProtocol(protocols.MsgpackProtocol):
         protocols.process_message(self, message,
                                   self.REGISTERED_FETCHER_CONSUMERS)
 
+    def _update_session_id(self):
+        self.session_id = manager_service.MANAGER.get_session_id()
+        logger.debug("Session id %s updated in listener service",
+                     self.session_id)
+
     def init_conn(self, conn_id, url):
         self.write_data(protocols.InitConnFetchUrlProducer(conn_id, url))
 
     def register_conn(self):
+        self._update_session_id()
+        logger.debug("Registering session id %s for user %s and public key %s",
+                     self.session_id, self.user_id, self.public_key)
         self.write_data(
             protocols.RegisterConnPIDProducer(user_id=self.user_id,
                                               session_id=self.session_id,
@@ -231,16 +239,18 @@ class BrowserListenerServer(asyncio.Protocol):
             self.amount_data_downloaded = amount_left
 
 
-async def configure_service(user_id, session_id, public_key, ssl_context):
+async def configure_service(user_id, public_key, ssl_context):
     loop = asyncio.get_event_loop()
-    fetcher_ = FetcherProtocol(user_id=user_id, session_id=session_id, public_key=public_key)
+    fetcher_ = FetcherProtocol(user_id=user_id, public_key=public_key)
     logger.info("Proxy listening at %s", hpxclient_settings.PROXY_LISTENER_LOCAL_PORT)
 
     global BROWSER_LISTENER
     if not BROWSER_LISTENER:
         BROWSER_LISTENER = await asyncio.wait([
             loop.create_server(
-                BrowserListenerServer, '127.0.0.1', hpxclient_settings.PROXY_LISTENER_LOCAL_PORT,
+                BrowserListenerServer,
+                '127.0.0.1',
+                hpxclient_settings.PROXY_LISTENER_LOCAL_PORT,
             ), ])
 
     await asyncio.wait([

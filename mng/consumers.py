@@ -20,9 +20,12 @@ class AuthResponseConsumer(protocols.AuthResponseConsumer):
             self.protocol.user_id = self.data[b'user_id']
             self.protocol.public_key = self.data[b'public_key']
             self.protocol.is_authenticated = True
-            if not self.protocol.services_started:
-                logger.info("Connection authorized. Starting all services.")
-                asyncio.ensure_future(self.protocol.start_services())
+
+            logger.info("Connection authorized. Starting all services "
+                        "with session %s.", self.protocol.session_id)
+            asyncio.ensure_future(self.protocol.start_services(
+                session_id=self.protocol.session_id.decode()))
+
         else:
             logger.error("Unexpected error: %s", error.decode())
             self.protocol.error = error.decode()
