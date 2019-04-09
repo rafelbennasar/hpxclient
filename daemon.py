@@ -7,7 +7,9 @@ from hpxclient import utils as hpxclient_utils
 from hpxclient import settings as hpxclient_settings
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)-15s %(filename)s %(lineno)d %(funcName)s %(message)s')
 
 
 def main():

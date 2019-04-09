@@ -1,12 +1,14 @@
-from decimal import Decimal
+import logging
 import asyncio
 
-from hpxclient import logger
 
+from decimal import Decimal
 from hpxclient import protocols
 from hpxclient import consts as hpxclient_consts
 from hpxclient import settings as hpxclient_settings
 from hpxclient.mng import service as manager_service
+
+logger = logging.getLogger(__name__)
 
 
 class AuthResponseConsumer(protocols.AuthResponseConsumer):

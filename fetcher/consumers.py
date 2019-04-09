@@ -13,15 +13,16 @@ TASKS = {}
 
 class InitConnConsumer(protocols.InitConnConsumer):
 
+
     def process(self):
         conn_id = self.data[b'conn_id']
         TASKS[conn_id] = fetcher_upstream.TransTransporter(
             conn_id,
             self.protocol.session_id,
             self.protocol)
-
         loop = asyncio.get_event_loop()
         dhost, dport = "127.0.0.1", hpxclient_settings.PROXY_FETCHER_LOCAL_PORT
+
         asyncio.ensure_future(
             loop.create_connection(lambda: TASKS[conn_id], dhost, dport))
 

@@ -1,6 +1,6 @@
 import asyncio
+import logging
 
-from hpxclient import logger
 from hpxclient import protocols
 from hpxclient import utils as hpxclient_utils
 from hpxclient.fetcher import service as fetcher_service
@@ -13,6 +13,7 @@ from hpxclient.mng import consts as mng_consts
 from hpxclient.mng import producers as mng_producers
 from hpxclient.mng import consumers as mng_consumers
 
+logger = logging.getLogger(__name__)
 
 MANAGER = None
 ssl_context = None
@@ -36,10 +37,9 @@ class RPCManagerServer(protocols.MsgpackProtocol):
         self.transport = transport
 
     def connection_lost(self, exc):
-        logger.info("hpxclient.mng.service Connection lost.")
+        logger.debug("hpxclient.mng.service Connection lost.")
 
     def message_received(self, message):
-        logger.info("MESSAGE RECEIVED in the RCP: %s", message)
         protocols.process_message(self, message, self.REGISTERED_CONSUMERS)
 
     def write_data(self, msg_producer):
@@ -62,6 +62,8 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         global MANAGER
         MANAGER = self
         super().__init__()
+
+        self.services_started = False
 
         self.transport = None
         self.is_authorized = False
@@ -92,6 +94,8 @@ class ManagerProtocol(protocols.MsgpackProtocol):
                    "public_key": self.public_key,
                    'ssl_context': self.ssl_context}
 
+        self.services_started = True
+
         await asyncio.wait([
             listener_service.configure_service(**ps_keys),
         ])
@@ -99,8 +103,10 @@ class ManagerProtocol(protocols.MsgpackProtocol):
             fetcher_service.configure_service(**ps_keys),
             # bridge_service.configure_server(**ps_keys),
         ])
+        logger.debug("Services started.")
 
     def connection_made(self, transport):
+        logger.info("Connection made manager.")
         self.transport = transport
         self.send_auth_request()
 
@@ -137,6 +143,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
         )
 
     def send_auth_request(self):
+        logger.debug("Sending auth request from manager.")
         self.write_data(
             mng_producers.AuthRequestProducer(email=self.email,
                                               password=self.password,
@@ -144,7 +151,7 @@ class ManagerProtocol(protocols.MsgpackProtocol):
                                               secret_key=self.secret_key))
 
     def connection_lost(self, exc):
-        logger.info("hpxclient.mng.service Connection lost.")
+        logger.debug("Connection lost manager.")
 
     def message_received(self, message):
         if self.message_handler:
@@ -191,7 +198,7 @@ async def start_client(email=None, password=None, public_key=None,
         host=hpxclient_settings.PROXY_MNG_SERVER_IP,
         port=hpxclient_settings.PROXY_MNG_SERVER_PORT,
         ssl=ssl_context,
-        retry_initial_connection=retry_initial_connection)
+        retry_initial_connection=True)
 
     if hpxclient_settings.RPC_USERNAME and hpxclient_settings.RPC_PASSWORD:
         loop = asyncio.get_event_loop()

@@ -13,7 +13,7 @@ if not os.path.exists(HPROX_DIR):
     os.mkdir(HPROX_DIR)
 
 PROXY_LISTENER_LOCAL_PORT = 8080
-DOMAIN = 'hprox.com'
+DOMAIN = 'dev.hprox.com'
 DOMAIN_IP = socket.gethostbyname(DOMAIN)
 
 # The listener server which handle local connection and proxies them.
