@@ -12,8 +12,6 @@ from hpxclient import utils as hpxclient_utils
 
 logger = logging.getLogger(__name__)
 
-FETCHER_UPSTREAM = None
-
 
 class TransTransporter(asyncio.Protocol):
     def __init__(self, conn_id, session_id, peer):
