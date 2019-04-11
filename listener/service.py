@@ -33,8 +33,8 @@ class FetcherProtocol(protocols.MsgpackProtocol):
         self.session_id = session_id
         self.user_id = user_id
         self.public_key = public_key
-        self.is_authorized = False
-        self.is_authenticated = False
+        self.is_authorized = True
+        self.is_authenticated = True
         self.amount_data_downloaded = 0
         self._buffered_data = []
         self.utime_last_ack = None
@@ -52,7 +52,7 @@ class FetcherProtocol(protocols.MsgpackProtocol):
         self.utime_last_ack = hpxclient_utils.get_utime_ms()
 
     def connection_lost(self, exc):
-        logger.info("Connection lost to fetcher: %s", exc)
+        logger.debug("Connection lost to fetcher: %s", exc)
         global FETCHER
         FETCHER = None
 
